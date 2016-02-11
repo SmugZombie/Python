@@ -7,25 +7,30 @@ import commands
 import os
 import textwrap
 
-#counter = 0
-#proceed = False
-#while proceed is False:
-#	if counter == 10:
-#		proceed = True
-#	else:
-#		print counter
-#		counter += 1
-#print "Done"
+def testPing(host):
+        if OS == "CYGWIN":
+                output = commands.getstatusoutput("timeout 1 ping " + host + " -n 1 | grep -E -o 'Received = [0-9]+' | awk {'print $3'}")[1]
+        elif OS == "LINUX":
+                output = commands.getstatusoutput("timeout 1 ping " + host + " -c 1 | grep -E -o '[0-9]+ received' | cut -f1 -d' '")[1]
+        elif OS == "OSX":
+                output = commands.getstatusoutput("timeout 1 ping " + host + " -c 1 | grep -E -o '[0-9]+ received' | cut -f1 -d' '")[1]
+        else:
+                output = commands.getstatusoutput("echo 0'")[1]
+        if str(output) != "1":
+                output = "0";
+        return output
 
-#proceed = False
-#while proceed is False:
-#	print "Do you want to continue?"
-#	answer = raw_input()
-#	if answer == "y":
-#		proceed = False
-#	elif answer == "n":
-#		proceed = True
-#print "Done"
+def getOS():
+	global OS
+        output = commands.getstatusoutput('uname')[1]
+        if output.find("CYGWIN") != -1:
+                output = "CYGWIN"
+        elif output.find("Linux") != -1:
+                output = "LINUX"
+        elif output.find("Darwin") != -1:
+                output = "OSX"
+	OS = output
+        return
 
 def addHost():
 	proceed = False
@@ -35,11 +40,14 @@ def addHost():
 		if hostname == "":
 			proceed = False
 		else:
-			print "Do you wish to continue with", hostname,"? (Y/N)"
-			answer = raw_input()
-			if answer == "y" or answer == "Y":
-				proceed = True
-
+			online = testPing(hostname)
+			if online == "1":
+				print "Do you wish to continue with", hostname,"? (Y/N)"
+				answer = raw_input()
+				if answer == "y" or answer == "Y":
+					proceed = True
+			else:
+				print "Unable to resolve",hostname,". Please enter a new hostname."
 	proceed = False
 	while proceed is False:
 		print "Enter the standard username for ", hostname,". (Blank if none)"
@@ -96,4 +104,5 @@ def addHost():
 	print "KeyFile :", keyfile
 	return
 
+getOS()
 addHost()
