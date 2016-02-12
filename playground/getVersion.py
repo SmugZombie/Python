@@ -31,7 +31,8 @@ def post(server, data):
 download = str(post(rawfileurl, data))
 
 #import re
-p = re.compile(ur'(?P<title>Version\ )(?P<version>.{1,3}..{1,3}..{1,3})')
+#p = re.compile(ur'(?P<title>Version\ )(?P<version>.{1,3}..{1,3}..{1,3})')
+p = re.compile(ur'(?P<title>Version\ )(?P<version>.{1,3}..{1,3}..{1,3})(\\n)')
 #test_str = u" Version 0.6.1"
 
-print re.search(p, download)
+print re.search(p, download).group(2)
