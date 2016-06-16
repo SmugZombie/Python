@@ -1,20 +1,52 @@
 #!/usr/bin/env python
 ## Tiny Python Syslog Server
-## Version 0.11.1
+## Version 0.12.1
 
 ## Ron Egli - github.com/smugzombie
-import SocketServer, time, os
+import SocketServer, time, os, ConfigParser
 
 # User Definable Variables
+CONFIG_PATH = "syslog_server.ini"
+
+# INI Defaults - Changes here will not take effect unless you remove the ini file
 HOST, PORT = "0.0.0.0", 514           # Listener IP and Port
 LOG_PATH = '../logs/'                 # Path to where you want the logs to go
-LOG_FILE = LOG_PATH+'syslog.log'      # Name of the log file to write to
-OLD_LOG_FILE = LOG_PATH+'syslog.yesterday.log' # Name of the log file to rotate to
-MAX_LOG_SIZE = 50                     # Max log file size before rotation in Megabytes
+LOG_FILE = 'syslog.log'      # Name of the log file to write to
+OLD_LOG_FILE = 'syslog.yesterday.log' # Name of the log file to rotate to
+MAX_LOG_SIZE = 50                      # Max log file size before rotation in Megabytes
 
 # Dynamic Variables
 statCount = 0                         # Incremental to be used by the script
-sizeCheck = 250                       # Recheck log file size after every X logs written
+sizeCheck = 2500                      # Recheck log file size after every X logs written
+config = ConfigParser.RawConfigParser()
+
+def readConfig():
+	# Read configuration from ini file
+	global HOST, PORT, LOG_PATH, LOG_FILE, OLD_LOG_FILE, MAX_LOG_SIZE
+	if not os.path.exists(CONFIG_PATH):
+		writeConfig()
+		return
+	config.read(CONFIG_PATH)
+	HOST = config.get('Settings', 'HOST')
+	PORT = config.getint('Settings', 'PORT')
+	LOG_PATH = config.get('Settings', 'LOG_PATH')
+	LOG_FILE = str(LOG_PATH + config.get('Settings', 'LOG_FILE'))
+	OLD_LOG_FILE = str(LOG_PATH + config.get('Settings', 'OLD_LOG_FILE'))
+	MAX_LOG_SIZE = config.getint('Settings', 'MAX_LOG_SIZE')
+
+def writeConfig():
+	# Write new configuration to ini file
+	config.add_section('Settings')
+	config.set('Settings','HOST',HOST)
+	config.set('Settings','PORT',PORT)
+	config.set('Settings','LOG_PATH',LOG_PATH)
+	config.set('Settings','LOG_FILE',LOG_FILE)
+	config.set('Settings','OLD_LOG_FILE',OLD_LOG_FILE)
+	config.set('Settings','MAX_LOG_SIZE',MAX_LOG_SIZE)
+
+	with open(CONFIG_PATH, 'wb') as configfile:
+		config.write(configfile)
+	readConfig()
 
 def checkLogDir(LOG_PATH):
 	# If the log directory doesn't exist, create it.
@@ -40,6 +72,7 @@ def logRotate():
 	os.rename(LOG_FILE, OLD_LOG_FILE)
 
 # Ensure Log directory exists
+readConfig()
 checkLogDir(LOG_PATH)
 
 class SyslogUDPHandler(SocketServer.BaseRequestHandler):
