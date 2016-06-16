@@ -3,15 +3,14 @@
 ## Version 0.10
 
 ## Ron Egli - github.com/smugzombie
+import SocketServer
+import time
+import os
 
 HOST, PORT = "0.0.0.0", 514
 LOG_PATH = '../logs/'
 LOG_FILE = LOG_PATH+'syslog.log'
 OLD_LOG_FILE = LOG_PATH+'syslog.yesterday.log'
-
-import SocketServer
-import time
-import os
 
 def checkLogDir(LOG_PATH):
 	if not os.path.exists(LOG_PATH):
