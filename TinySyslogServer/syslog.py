@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ## Tiny Python Syslog Server
-## Version 0.11
+## Version 0.11.1
 
 ## Ron Egli - github.com/smugzombie
 import SocketServer, time, os
@@ -44,7 +44,7 @@ checkLogDir(LOG_PATH)
 
 class SyslogUDPHandler(SocketServer.BaseRequestHandler):
 	def handle(self):
-		global statcount
+		global statCount
 		now = time.strftime("%b %d %H:%I:%S")
 		data = bytes.decode(self.request[0].strip())
 		socket = self.request[1]
