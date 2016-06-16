@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 ## Tiny Python Syslog Server
-## Version 0.12.1
+## Version 0.12.2
 
 ## Ron Egli - github.com/smugzombie
 import SocketServer, time, os, ConfigParser
 
 # User Definable Variables
-CONFIG_PATH = "syslog_server.ini"
+CURRENT_PATH = str(os.path.dirname(os.path.realpath(__file__))) + "/"
+CONFIG_PATH = CURRENT_PATH+"syslog_server.ini"
 
 # INI Defaults - Changes here will not take effect unless you remove the ini file
 HOST, PORT = "0.0.0.0", 514           # Listener IP and Port
