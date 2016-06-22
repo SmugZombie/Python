@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 ## Tiny Python Syslog Server
-## Version 0.12.2
+## Version 0.12.4
 
 ## Ron Egli - github.com/smugzombie
-import SocketServer, time, os, ConfigParser
+import SocketServer, time, os, ConfigParser, sys
 
 # User Definable Variables
-CURRENT_PATH = str(os.path.dirname(os.path.realpath(__file__))) + "/"
+CURRENT_PATH = str(os.path.dirname(os.path.realpath('__file__'))) + "/"
 CONFIG_PATH = CURRENT_PATH+"syslog_server.ini"
 
 # INI Defaults - Changes here will not take effect unless you remove the ini file
@@ -14,7 +14,14 @@ HOST, PORT = "0.0.0.0", 514           # Listener IP and Port
 LOG_PATH = '../logs/'                 # Path to where you want the logs to go
 LOG_FILE = 'syslog.log'      # Name of the log file to write to
 OLD_LOG_FILE = 'syslog.yesterday.log' # Name of the log file to rotate to
-MAX_LOG_SIZE = 50                      # Max log file size before rotation in Megabytes
+MAX_LOG_SIZE = 50                     # Max log file size before rotation in Megabytes
+DEBUG = False
+
+try: ARGS = sys.argv; 
+except: ARGS = "";
+
+if "-d" in ARGS:
+	DEBUG = True
 
 # Dynamic Variables
 statCount = 0                         # Incremental to be used by the script
@@ -53,9 +60,13 @@ def checkLogDir(LOG_PATH):
 	# If the log directory doesn't exist, create it.
 	if not os.path.exists(LOG_PATH):
 		os.makedirs(LOG_PATH)
+	# Create Syslog File if not exist
+	if not os.path.isfile(LOG_FILE):
+		open(LOG_FILE, 'a').close()
 
 def Logger(message):
-	print message # Debugging
+	if DEBUG:
+		print message # Debugging
 	log = open(LOG_FILE,'a')  # Open file in append mode
 	log.write(message+'\n')   # Write to file
 	log.close()               # Close file
