@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ## Tiny Python Syslog Server
-## Version 0.12.6
+## Version 0.12.7
 
 ## Ron Egli - github.com/smugzombie
 import SocketServer, time, os, ConfigParser, sys
@@ -102,12 +102,12 @@ class SyslogUDPHandler(SocketServer.BaseRequestHandler):
 
 # MAIN
 if __name__ == "__main__":
-	Logger('msg="Syslog Server Started"')
+	Logger('127.0.0.1 msg="Syslog Server Started"')
 	try:
 		server = SocketServer.UDPServer((HOST,PORT), SyslogUDPHandler)
 		server.serve_forever(poll_interval=0.5)
 	except (IOError, SystemExit):
 		raise
 	except KeyboardInterrupt:
-		Logger('msg="Syslog Server Shutting Down"')
+		Logger('127.0.0.1 msg="Syslog Server Shutting Down"')
 		print ("Crtl+C Pressed. Shutting down.")
