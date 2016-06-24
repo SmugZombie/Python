@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ## Tiny Python Syslog Server
-## Version 0.12.5
+## Version 0.12.6
 
 ## Ron Egli - github.com/smugzombie
 import SocketServer, time, os, ConfigParser, sys
@@ -65,10 +65,11 @@ def checkLogDir(LOG_PATH):
 		open(LOG_FILE, 'a').close()
 
 def Logger(message):
+	now = time.strftime("%b %d %H:%M:%S")
 	if DEBUG:
 		print message # Debugging
 	log = open(LOG_FILE,'a')  # Open file in append mode
-	log.write(message+'\n')   # Write to file
+	log.write(now + " " + message + '\n')   # Write to file
 	log.close()               # Close file
 
 def checkRotate():
@@ -90,10 +91,9 @@ checkLogDir(LOG_PATH)
 class SyslogUDPHandler(SocketServer.BaseRequestHandler):
 	def handle(self):
 		global statCount
-		now = time.strftime("%b %d %H:%M:%S")
 		data = bytes.decode(self.request[0].strip())
 		socket = self.request[1]
-		message = str(now)+" "+str(self.client_address[0])+" "+str(data)
+		message = str(self.client_address[0])+" "+str(data)
 		Logger(message)
 		statCount += 1
 		if statCount >= 250:
@@ -102,10 +102,12 @@ class SyslogUDPHandler(SocketServer.BaseRequestHandler):
 
 # MAIN
 if __name__ == "__main__":
+	Logger('msg="Syslog Server Started"')
 	try:
 		server = SocketServer.UDPServer((HOST,PORT), SyslogUDPHandler)
 		server.serve_forever(poll_interval=0.5)
 	except (IOError, SystemExit):
 		raise
 	except KeyboardInterrupt:
+		Logger('msg="Syslog Server Shutting Down"')
 		print ("Crtl+C Pressed. Shutting down.")
