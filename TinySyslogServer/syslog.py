@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ## Tiny Python Syslog Server
-## Version 0.12.7
+## Version 0.12.8
 
 ## Ron Egli - github.com/smugzombie
 import SocketServer, time, os, ConfigParser, sys
@@ -76,12 +76,14 @@ def checkRotate():
 	# Check the size of the file, if above MAX_LOG_SIZE fire off logRotate, otherwise keep logging
 	logSize = os.stat(LOG_FILE).st_size # filesize in bytes
 	megaBytes = logSize / 1048576       # convert to megabytes
+	#Logger("DEBUG - Filesize "+str(megaBytes))
 	if megaBytes >= MAX_LOG_SIZE:
 		logRotate()
 
 def logRotate():
 	# Delete OLD_LOG_FILE and move LOG_FILE to its place.
-	os.remove(OLD_LOG_FILE)
+	if os.path.isfile(OLD_LOG_FILE):
+		os.remove(OLD_LOG_FILE)
 	os.rename(LOG_FILE, OLD_LOG_FILE)
 
 # Ensure Log directory exists
@@ -95,10 +97,12 @@ class SyslogUDPHandler(SocketServer.BaseRequestHandler):
 		socket = self.request[1]
 		message = str(self.client_address[0])+" "+str(data)
 		Logger(message)
-		statCount += 1
+
 		if statCount >= 250:
+			statCount = 0
 			checkRotate()
-			statcount = 0
+		else:
+			statCount += 1
 
 # MAIN
 if __name__ == "__main__":
