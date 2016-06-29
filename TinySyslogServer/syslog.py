@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ## Tiny Python Syslog Server
-## Version 0.12.9
+## Version 0.12.10
 
 ## Ron Egli - github.com/smugzombie
 import SocketServer, time, os, ConfigParser, sys
@@ -13,7 +13,7 @@ CONFIG_PATH = CURRENT_PATH+"syslog_server.ini"
 HOST, PORT = "0.0.0.0", 514           # Listener IP and Port
 LOG_PATH = '../logs/'                 # Path to where you want the logs to go
 LOG_FILE = 'syslog.log'      # Name of the log file to write to
-OLD_LOG_FILE = 'syslog.yesterday.log' # Name of the log file to rotate to
+OLD_LOG_FILE = 'syslog.log.1' # Name of the log file to rotate to
 MAX_LOG_SIZE = 1024                     # Max log file size before rotation in Megabytes
 DEBUG = False
 
