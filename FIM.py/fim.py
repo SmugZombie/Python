@@ -1,14 +1,25 @@
 # Script: fim.py
 # Purpose: A tiny fim agent using python
 # Author: Ron Egli - github.com/smugzombie
-# Version: 0.1
+version="0.2"
 
 # Imports
-import hashlib, json, os
+import hashlib, json, os, time, sys
+
+try: ARGS = sys.argv;
+except: ARGS = "";
+
+if "-d" in ARGS:
+        DEBUG = True
 
 # Define variables
 fimjson = {}
-rootdir = 'C:/cygwin64/'
+fimjson['stats'] = {}
+fimjson['files'] = {}
+rootdir = 'C:\Windows\System32'
+
+# Non Definable Variables
+DEBUG = False
 
 ### FUNCTIONS ###
 
@@ -44,11 +55,23 @@ def sha1(fileName):
 
 ### Main ###
 
+# Set Start Time
+startTime = time.time()
+
 for subdir, dirs, files in os.walk(rootdir):
     for file in files:
         filename = os.path.join(subdir, file)
         #print md5(filename), sha1(filename), filename
-        fimjson[filename] = {}
-        fimjson[filename]['md5'] = md5(filename)
-        fimjson[filename]['sha1'] = sha1(filename)
-        print filename, json.dumps(fimjson[filename])
+        fimjson['files'][filename] = {}
+        fimjson['files'][filename]['md5'] = md5(filename)
+        fimjson['files'][filename]['sha1'] = sha1(filename)
+        if DEBUG: print filename, json.dumps(fimjson['files'][filename])
+
+elapsedTime = time.time() - startTime
+
+fimjson['stats']['start'] = startTime
+fimjson['stats']['duration'] = elapsedTime
+fimjson['stats']['version'] = version
+
+with open("fim.json", 'w') as fimoutput:
+    fimoutput.write(json.dumps(fimjson))
