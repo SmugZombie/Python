@@ -1,10 +1,10 @@
 # Script: fim.py
-# Purpose: A tiny fim agent using python
+# Purpose: A tiny fim/rim agent for Windows using python
 # Author: Ron Egli - github.com/smugzombie
-version="0.4"
+version="0.5"
 
 # Imports
-import hashlib, json, os, time, sys
+import hashlib, json, os, time, sys, _winreg
 
 # Arguments for Debugging
 try: ARGS = sys.argv; 
@@ -75,7 +75,30 @@ def scanDirectory(directory):
             fimjson['files'][filename] = {}
             fimjson['files'][filename]['md5'] = md5(filename)
             fimjson['files'][filename]['sha1'] = sha1(filename)
+            fimjson['files'][filename]['type'] = "fim"
             if DEBUG: print filename, json.dumps(fimjson['files'][filename])    
+
+def regkey_value(path, name="", start_key = None):
+    try:
+        if isinstance(path, str):
+            path = path.split("\\")
+        if start_key is None:
+            start_key = getattr(_winreg, path[0])
+            return regkey_value(path[1:], name, start_key)
+        else:
+            subkey = path.pop(0)
+        with _winreg.OpenKey(start_key, subkey) as handle:
+            assert handle
+            if path:
+                return regkey_value(path, name, handle)
+            else:
+                desc, i = None, 0
+                while not desc or desc[0] != name:
+                    desc = _winreg.EnumValue(handle, i)
+                    i += 1
+                return desc[1]
+    except:
+        return "null"
 
 ### Main ###
 # Start the Clock
@@ -91,6 +114,7 @@ for x in xrange(filecount):
     fimjson['files'][filename] = {}
     fimjson['files'][filename]['md5'] = md5(filename)
     fimjson['files'][filename]['sha1'] = sha1(filename)
+    fimjson['files'][filename]['type'] = "fim"
     if DEBUG: print filename, json.dumps(fimjson['files'][filename])
 
 # Loop Through Specified Directories
@@ -98,6 +122,20 @@ directorycount = len(config['config']['directories'])
 for x in xrange(directorycount):
     directoryname = config['config']['directories'][x]
     scanDirectory(directoryname)
+
+# Setup Hashing for Values
+md = hashlib.md5(); sh = hashlib.sha1()
+
+# Loop Through Specified Registry Keys
+registrycount = len(config['config']['registry'])
+for x in xrange(registrycount):
+    registryname = config['config']['registry'][x]
+    registryValue = regkey_value(str(registryname),"")
+    fimjson['files'][registryname] = {}
+    md.update(registryValue); sh.update(registryValue)
+    fimjson['files'][registryname]['md5'] = str(md.hexdigest())
+    fimjson['files'][registryname]['sha1'] = str(sh.hexdigest())
+    fimjson['files'][registryname]['type'] = "rim"
 
 # Compile JSON Stats
 elapsedTime = time.time() - startTime
