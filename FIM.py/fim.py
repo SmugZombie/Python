@@ -1,27 +1,29 @@
 # Script: fim.py
 # Purpose: A tiny fim agent using python
 # Author: Ron Egli - github.com/smugzombie
-version="0.3"
+version="0.4"
 
 # Imports
 import hashlib, json, os, time, sys
 
+# Arguments for Debugging
 try: ARGS = sys.argv; 
 except: ARGS = "";
-
 DEBUG = False
 if "-d" in ARGS: DEBUG = True
 
-# Define variables
+# User Definable Variables
+configFile = "fim.conf"
+WINDIR = "C:\\\Windows"
+
+# Predefined Variables
 fimjson = {}
 fimjson['stats'] = {}
 fimjson['files'] = {}
-configFile = "fim.conf"
 config = {}
-WINDIR = "C:\\\Windows"
+
 
 ### FUNCTIONS ###
-
 def loadConfig():
     global config
     try:
@@ -64,6 +66,7 @@ def sha1(fileName):
     fileHandle.close()
     return str(sha1hash.hexdigest())
 
+# Scan full directory and subdirectories
 def scanDirectory(directory):
     global fimjson
     for subdir, dirs, files in os.walk(directory):
@@ -75,13 +78,13 @@ def scanDirectory(directory):
             if DEBUG: print filename, json.dumps(fimjson['files'][filename])    
 
 ### Main ###
+# Start the Clock
 startTime = time.time()
+
+# Load the Configuration File
 loadConfig()
 
-#print config['config']['files'][0]
-#print os.path.isfile(config['config']['files'][0])
-#print json.dumps(config)
-
+# Loop Through Specified Files
 filecount = len(config['config']['files'])
 for x in xrange(filecount):
     filename = config['config']['files'][x]
@@ -90,16 +93,18 @@ for x in xrange(filecount):
     fimjson['files'][filename]['sha1'] = sha1(filename)
     if DEBUG: print filename, json.dumps(fimjson['files'][filename])
 
+# Loop Through Specified Directories
 directorycount = len(config['config']['directories'])
 for x in xrange(directorycount):
     directoryname = config['config']['directories'][x]
     scanDirectory(directoryname)
 
-
+# Compile JSON Stats
 elapsedTime = time.time() - startTime
 fimjson['stats']['start'] = startTime
 fimjson['stats']['duration'] = elapsedTime
 fimjson['stats']['version'] = version
 
+# Write to file
 with open("fim.json", 'w') as fimoutput:
     fimoutput.write(json.dumps(fimjson))
