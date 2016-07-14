@@ -1,27 +1,38 @@
 # Script: fim.py
 # Purpose: A tiny fim agent using python
 # Author: Ron Egli - github.com/smugzombie
-version="0.2"
+version="0.3"
 
 # Imports
 import hashlib, json, os, time, sys
 
-try: ARGS = sys.argv;
+try: ARGS = sys.argv; 
 except: ARGS = "";
 
-if "-d" in ARGS:
-        DEBUG = True
+DEBUG = False
+if "-d" in ARGS: DEBUG = True
 
 # Define variables
 fimjson = {}
 fimjson['stats'] = {}
 fimjson['files'] = {}
-rootdir = 'C:\Windows\System32'
-
-# Non Definable Variables
-DEBUG = False
+configFile = "fim.conf"
+config = {}
+WINDIR = "C:\\\Windows"
 
 ### FUNCTIONS ###
+
+def loadConfig():
+    global config
+    try:
+        with open ("fim.conf", "r") as myfile:
+            data=myfile.read()
+        data = data.replace("%WINDIR%", WINDIR)
+        #print data
+        config = json.loads(data) 
+    except:
+        print "Cannot Read Config - Exiting..."
+        exit()
 
 # Compute MD5 Hash
 def md5(fileName):
@@ -53,22 +64,39 @@ def sha1(fileName):
     fileHandle.close()
     return str(sha1hash.hexdigest())
 
+def scanDirectory(directory):
+    global fimjson
+    for subdir, dirs, files in os.walk(directory):
+        for file in files:
+            filename = os.path.join(subdir, file)
+            fimjson['files'][filename] = {}
+            fimjson['files'][filename]['md5'] = md5(filename)
+            fimjson['files'][filename]['sha1'] = sha1(filename)
+            if DEBUG: print filename, json.dumps(fimjson['files'][filename])    
+
 ### Main ###
-
-# Set Start Time
 startTime = time.time()
+loadConfig()
 
-for subdir, dirs, files in os.walk(rootdir):
-    for file in files:
-        filename = os.path.join(subdir, file)
-        #print md5(filename), sha1(filename), filename
-        fimjson['files'][filename] = {}
-        fimjson['files'][filename]['md5'] = md5(filename)
-        fimjson['files'][filename]['sha1'] = sha1(filename)
-        if DEBUG: print filename, json.dumps(fimjson['files'][filename])
+#print config['config']['files'][0]
+#print os.path.isfile(config['config']['files'][0])
+#print json.dumps(config)
+
+filecount = len(config['config']['files'])
+for x in xrange(filecount):
+    filename = config['config']['files'][x]
+    fimjson['files'][filename] = {}
+    fimjson['files'][filename]['md5'] = md5(filename)
+    fimjson['files'][filename]['sha1'] = sha1(filename)
+    if DEBUG: print filename, json.dumps(fimjson['files'][filename])
+
+directorycount = len(config['config']['directories'])
+for x in xrange(directorycount):
+    directoryname = config['config']['directories'][x]
+    scanDirectory(directoryname)
+
 
 elapsedTime = time.time() - startTime
-
 fimjson['stats']['start'] = startTime
 fimjson['stats']['duration'] = elapsedTime
 fimjson['stats']['version'] = version
