@@ -1,7 +1,7 @@
 # Script: fim.py
 # Purpose: A tiny fim/rim agent for Windows using python
 # Author: Ron Egli - github.com/smugzombie
-version="0.5"
+version="0.5.1"
 
 # Imports
 import hashlib, json, os, time, sys, _winreg
@@ -139,8 +139,8 @@ for x in xrange(registrycount):
 
 # Compile JSON Stats
 elapsedTime = time.time() - startTime
-fimjson['stats']['start'] = startTime
-fimjson['stats']['duration'] = elapsedTime
+fimjson['stats']['start'] = round(startTime, 2)
+fimjson['stats']['duration'] = round(elapsedTime, 2)
 fimjson['stats']['version'] = version
 
 # Write to file
