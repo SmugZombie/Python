@@ -1,7 +1,7 @@
 # Script: fim.py
 # Purpose: A tiny fim/rim agent for Windows using python
 # Author: Ron Egli - github.com/smugzombie
-version="0.5.1"
+version="0.6"
 
 # Imports
 import hashlib, json, os, time, sys, _winreg
@@ -21,7 +21,6 @@ fimjson = {}
 fimjson['stats'] = {}
 fimjson['files'] = {}
 config = {}
-
 
 ### FUNCTIONS ###
 def loadConfig():
@@ -78,27 +77,16 @@ def scanDirectory(directory):
             fimjson['files'][filename]['type'] = "fim"
             if DEBUG: print filename, json.dumps(fimjson['files'][filename])    
 
-def regkey_value(path, name="", start_key = None):
+def getRegKey(path):
+    path = path[19:]
     try:
-        if isinstance(path, str):
-            path = path.split("\\")
-        if start_key is None:
-            start_key = getattr(_winreg, path[0])
-            return regkey_value(path[1:], name, start_key)
-        else:
-            subkey = path.pop(0)
-        with _winreg.OpenKey(start_key, subkey) as handle:
-            assert handle
-            if path:
-                return regkey_value(path, name, handle)
-            else:
-                desc, i = None, 0
-                while not desc or desc[0] != name:
-                    desc = _winreg.EnumValue(handle, i)
-                    i += 1
-                return desc[1]
+        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, path, 0, _winreg.KEY_READ)
+        output = ""
+        for i in xrange(0, _winreg.QueryInfoKey(key)[1]):
+            output += str(_winreg.EnumValue(key, i))
     except:
-        return "null"
+            output = "null"
+    return output
 
 ### Main ###
 # Start the Clock
@@ -130,11 +118,15 @@ md = hashlib.md5(); sh = hashlib.sha1()
 registrycount = len(config['config']['registry'])
 for x in xrange(registrycount):
     registryname = config['config']['registry'][x]
-    registryValue = regkey_value(str(registryname),"")
+    registryValue = getRegKey(registryname)
     fimjson['files'][registryname] = {}
-    md.update(registryValue); sh.update(registryValue)
-    fimjson['files'][registryname]['md5'] = str(md.hexdigest())
-    fimjson['files'][registryname]['sha1'] = str(sh.hexdigest())
+    if registryValue is not "null":
+        md.update(registryValue); sh.update(registryValue)
+        fimjson['files'][registryname]['md5'] = str(md.hexdigest())
+        fimjson['files'][registryname]['sha1'] = str(sh.hexdigest())
+    else:
+        fimjson['files'][registryname]['md5'] = registryValue
+        fimjson['files'][registryname]['sha1'] = registryValue
     fimjson['files'][registryname]['type'] = "rim"
 
 # Compile JSON Stats
