@@ -55,5 +55,6 @@ lastline = tail(f,1)
 while True:
     newline = tail(f, 1)
     if newline != lastline:
-        print newline
-        lastline = newline
+    	if len(newline) > 6:
+        	print newline
+        	lastline = newline
