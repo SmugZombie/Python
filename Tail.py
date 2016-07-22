@@ -1,7 +1,9 @@
 # Tail.py
 # A simple file tailer
 # Ron Egli - github.com/smugzombie
-# 0.2
+# 0.3
+
+import sys
 
 def tail( f, lines=20 ):
     total_lines_wanted = lines
@@ -30,11 +32,28 @@ def tail( f, lines=20 ):
     all_read_text = ''.join(reversed(blocks))
     return '\n'.join(all_read_text.splitlines()[-total_lines_wanted:])
 
-file = "C:\Program Files (x86)\Breach Radar\logs\syslog.log"
+try:
+	file = sys.argv[1]
+except:
+	print "Invalid File Provided"
+	hello = raw_input()
+	exit()
+
+try:
+	num_lines = sum(1 for line in open(file))
+	f = open(file)
+except:
+	print "Unable to open provided file: " + str(file)
+	hello = raw_input()
+	exit()
+
+
 lastline = ""
 
+print tail(f,20)
+lastline = tail(f,1)
 while True:
-    newline = tail(open(file), 1)
+    newline = tail(f, 1)
     if newline != lastline:
         print newline
         lastline = newline
