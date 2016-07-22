@@ -1,29 +1,40 @@
 # Tail.py
 # A simple file tailer
 # Ron Egli - github.com/smugzombie
-# 0.1
+# 0.2
 
-import sys
+def tail( f, lines=20 ):
+    total_lines_wanted = lines
 
-try:
-	file = sys.argv[1]
-except:
-	print "Invalid File Provided"
-	hello = raw_input()
-	exit()
+    BLOCK_SIZE = 1024
+    f.seek(0, 2)
+    block_end_byte = f.tell()
+    lines_to_go = total_lines_wanted
+    block_number = -1
+    blocks = [] # blocks of size BLOCK_SIZE, in reverse order starting
+                # from the end of the file
+    while lines_to_go > 0 and block_end_byte > 0:
+        if (block_end_byte - BLOCK_SIZE > 0):
+            # read the last block we haven't yet read
+            f.seek(block_number*BLOCK_SIZE, 2)
+            blocks.append(f.read(BLOCK_SIZE))
+        else:
+            # file too small, start from begining
+            f.seek(0,0)
+            # only read what was not read
+            blocks.append(f.read(block_end_byte))
+        lines_found = blocks[-1].count('\n')
+        lines_to_go -= lines_found
+        block_end_byte -= BLOCK_SIZE
+        block_number -= 1
+    all_read_text = ''.join(reversed(blocks))
+    return '\n'.join(all_read_text.splitlines()[-total_lines_wanted:])
 
-try:
-	f = open(file)
-except:
-	print "Unable to open provided file: " + str(file)
-	hello = raw_input()
-	exit()
+file = "C:\Program Files (x86)\Breach Radar\logs\syslog.log"
+lastline = ""
 
-p = 0
 while True:
-    f.seek(p)
-    latest_data = f.read()
-    p = f.tell()
-    if latest_data:
-        print latest_data
-        #print str(p).center(10).center(80, '=')
+    newline = tail(open(file), 1)
+    if newline != lastline:
+        print newline
+        lastline = newline
