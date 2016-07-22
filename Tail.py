@@ -1,7 +1,7 @@
 # Tail.py
 # A simple file tailer
 # Ron Egli - github.com/smugzombie
-# 0.3
+# 0.4
 
 import sys
 
