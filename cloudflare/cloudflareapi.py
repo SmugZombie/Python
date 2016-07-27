@@ -1,6 +1,6 @@
 # Cloudflare Api
 # Ron Egli - Github.com/smugzombie
-# Version 0.4
+# Version 0.5
 
 import requests, json, argparse
 
@@ -38,9 +38,9 @@ def listDNSZones(page=1):
 	return json.dumps(zones, sort_keys=True, indent=4, separators=(',', ': '))
 
 def createZone(domain):
-	url = "https://api.cloudflare.com/client/v4/zones/"
+	url = "/zones/"
 	payload = "{\"name\":\"" + str(domain) + "\"}";
-	response = requests.request("POST", url, data=payload, headers=headers)
+	response = requests.request("POST", api_url+url, data=payload, headers=headers)
 
 	try:
 		data = json.loads(response.text)
@@ -51,9 +51,9 @@ def createZone(domain):
 
 def createDNSRecord(domain, record, host, content):
 	zone_id = getZoneId(domain)
-	url = "https://api.cloudflare.com/client/v4/zones/" + str(zone_id) + "/dns_records"
+	url = "/zones/" + str(zone_id) + "/dns_records"
 	payload = "{\"type\":\"" + str(record) + "\",\"name\":\"" + str(host) + "." + str(domain) + "\",\"content\":\"" + str(content) + "\",\"ttl\":120}"
-	response = requests.request("POST", url, data=payload, headers=headers)
+	response = requests.request("POST", api_url+url, data=payload, headers=headers)
 	
 	try:
 		data = json.loads(response.text)
@@ -70,8 +70,8 @@ def createDNSRecord(domain, record, host, content):
 
 def deleteDNSRecord(domain, record_id):
 	zone_id = getZoneId(domain)
-	url = "https://api.cloudflare.com/client/v4/zones/" + str(zone_id) + "/dns_records/" + str(record_id)
-	response = requests.request("DELETE", url, headers=headers)
+	url = "/zones/" + str(zone_id) + "/dns_records/" + str(record_id)
+	response = requests.request("DELETE", api_url+url, headers=headers)
 
 	try:
 		data = json.loads(response.text)
@@ -84,8 +84,8 @@ def deleteDNSRecord(domain, record_id):
 
 def listDNSRecords(domain):
 	zone_id = getZoneId(domain)
-	url = "https://api.cloudflare.com/client/v4/zones/" + str(zone_id) + "/dns_records" 
-	response = requests.request("GET", url, headers=headers)
+	url = "/zones/" + str(zone_id) + "/dns_records" 
+	response = requests.request("GET", api_url+url, headers=headers)
 	
 	try:
 		data = json.loads(response.text)
@@ -105,8 +105,8 @@ def listDNSRecords(domain):
 	return json.dumps(dns_records, sort_keys=True, indent=4, separators=(',', ': '))
 
 def getZoneId(domain):
-	url = "https://api.cloudflare.com/client/v4/zones/?name=" + str(domain)
-	response = requests.request("GET", url, headers=headers)
+	url = "/zones/?name=" + str(domain)
+	response = requests.request("GET", api_url+url, headers=headers)
 	try:
 		data = json.loads(response.text)
 	except:
