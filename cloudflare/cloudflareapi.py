@@ -1,16 +1,45 @@
 # Cloudflare Api
 # Ron Egli - Github.com/smugzombie
-# Version 0.2
+# Version 0.4
 
 import requests, json, argparse
 
 auth_email = ""
 auth_key = ""
+api_url = "https://api.cloudflare.com/client/v4"
+headers = { 'x-auth-email': auth_email, 'x-auth-key': auth_key, 'content-type': "application/json", 'cache-control': "no-cache" }
+
+def listDNSZones(page=1):
+	url = "/zones?per_page=50&page=" + str(page)
+	response = requests.request("GET", api_url+url, headers=headers)
+
+	try:
+		data = json.loads(response.text)
+	except:
+		print "Uhoh - List Zones"
+
+	zones = {}
+	for x in xrange(len(data['result'])):
+		zone = data['result'][x]
+		zone_id = len(zones)
+		zones[zone['name']] = {}
+		zones[zone['name']]['status'] = zone['status'] 
+
+	zones['stats'] = {}
+	zones['stats']['count'] = data['result_info']['count']
+	zones['stats']['page'] = data['result_info']['page']
+	zones['stats']['total_count'] = data['result_info']['total_count']
+	zones['stats']['total_pages'] = data['result_info']['total_pages']
+
+	if data['result_info']['total_pages'] > data['result_info']['page']:
+		page += 1
+		listDNSZones(page)
+
+	return json.dumps(zones, sort_keys=True, indent=4, separators=(',', ': '))
 
 def createZone(domain):
 	url = "https://api.cloudflare.com/client/v4/zones/"
 	payload = "{\"name\":\"" + str(domain) + "\"}";
-	headers = { 'x-auth-email': auth_email, 'x-auth-key': auth_key, 'content-type': "application/json", 'cache-control': "no-cache" }	
 	response = requests.request("POST", url, data=payload, headers=headers)
 
 	try:
@@ -24,7 +53,6 @@ def createDNSRecord(domain, record, host, content):
 	zone_id = getZoneId(domain)
 	url = "https://api.cloudflare.com/client/v4/zones/" + str(zone_id) + "/dns_records"
 	payload = "{\"type\":\"" + str(record) + "\",\"name\":\"" + str(host) + "." + str(domain) + "\",\"content\":\"" + str(content) + "\",\"ttl\":120}"
-	headers = { 'x-auth-email': auth_email, 'x-auth-key': auth_key, 'content-type': "application/json", 'cache-control': "no-cache" }
 	response = requests.request("POST", url, data=payload, headers=headers)
 	
 	try:
@@ -43,7 +71,6 @@ def createDNSRecord(domain, record, host, content):
 def deleteDNSRecord(domain, record_id):
 	zone_id = getZoneId(domain)
 	url = "https://api.cloudflare.com/client/v4/zones/" + str(zone_id) + "/dns_records/" + str(record_id)
-	headers = { 'x-auth-email': auth_email, 'x-auth-key': auth_key, 'content-type': "application/json", 'cache-control': "no-cache" }
 	response = requests.request("DELETE", url, headers=headers)
 
 	try:
@@ -58,15 +85,12 @@ def deleteDNSRecord(domain, record_id):
 def listDNSRecords(domain):
 	zone_id = getZoneId(domain)
 	url = "https://api.cloudflare.com/client/v4/zones/" + str(zone_id) + "/dns_records" 
-	headers = { 'x-auth-email': auth_email, 'x-auth-key': auth_key, 'content-type': "application/json", 'cache-control': "no-cache" }
 	response = requests.request("GET", url, headers=headers)
 	
 	try:
 		data = json.loads(response.text)
 	except:
 		print "Uhoh - List DNS Records"
-
-	print data
 
 	dns_records = {}
 	for x in xrange(len(data['result'])):
@@ -82,7 +106,6 @@ def listDNSRecords(domain):
 
 def getZoneId(domain):
 	url = "https://api.cloudflare.com/client/v4/zones/?name=" + str(domain)
-	headers = { 'x-auth-email': auth_email, 'x-auth-key': auth_key, 'content-type': "application/json", 'cache-control': "no-cache" }
 	response = requests.request("GET", url, headers=headers)
 	try:
 		data = json.loads(response.text)
@@ -98,7 +121,7 @@ def getZoneId(domain):
 ########### MAIN ###########
 
 arguments = argparse.ArgumentParser()
-arguments.add_argument('--domain','-d', help="Domain name to perform an action on", required=True)
+arguments.add_argument('--domain','-d', help="Domain name to perform an action on", required=False, default="")
 arguments.add_argument('--action','-a', help="Action to perform", required=False, default="list")
 arguments.add_argument('--content','-c', help="Content of DNS Record (IP / FQDN)", required=False, default="")
 arguments.add_argument('--record','-r', help="Type of DNS Record to perform an action on", required=False, default="")
@@ -113,7 +136,18 @@ host = args.host
 record_id = args.id
 
 if action == "list":
-	print listDNSRecords(domain)
+	if domain == "":
+		print listDNSZones(1)
+	else:
+		print listDNSRecords(domain)
+	exit()
+
+while domain == "":
+	domain = raw_input("What domain name are you looking to perform the " + action + " action on? (Example domain.tld): ").upper()
+	if domain != "":
+		if "." not in domain:
+			print "Invalid Domain " + domain + ". Try Again."
+			domain = ""
 
 if action == "create":
 	print createZone(domain)
