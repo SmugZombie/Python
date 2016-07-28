@@ -1,6 +1,6 @@
 # Cloudflare Api
 # Ron Egli - Github.com/smugzombie
-# Version 0.5
+# Version 0.6
 
 import requests, json, argparse
 
@@ -37,6 +37,16 @@ def listDNSZones(page=1):
 
 	return json.dumps(zones, sort_keys=True, indent=4, separators=(',', ': '))
 
+def getRecordId(host, zone_id):
+	url = "/zones/" + str(zone_id) + "/dns_records?name=" + host 
+	response = requests.request("GET", api_url+url,  headers=headers)
+
+	try:
+		data = json.loads(response.text)
+	except:
+		print "Uhoh - Create Zone"
+	return data['result'][0]['id']
+
 def createZone(domain):
 	url = "/zones/"
 	payload = "{\"name\":\"" + str(domain) + "\"}";
@@ -68,8 +78,9 @@ def createDNSRecord(domain, record, host, content):
 	dns_records['errors'] = data['errors']
 	return json.dumps(dns_records, sort_keys=True, indent=4, separators=(',', ': '))
 
-def deleteDNSRecord(domain, record_id):
+def deleteDNSRecord(host, domain):
 	zone_id = getZoneId(domain)
+	record_id = getRecordId(host+"."+domain, zone_id)
 	url = "/zones/" + str(zone_id) + "/dns_records/" + str(record_id)
 	response = requests.request("DELETE", api_url+url, headers=headers)
 
@@ -162,7 +173,7 @@ if action == "add":
 
 	# If host not provided in arguments.
 	while host == "":
-		host = raw_input("What host are you adding this " + record + " record for? (Example: {HOST}.domain.tld ): ").upper()
+		host = raw_input("What host are you adding this " + record + " record for? (Example: {HOST}." + domain + "): ").upper()
 		if host == "":
 			print "Invalid Host. Try Again."
 
@@ -174,10 +185,10 @@ if action == "add":
 	print createDNSRecord(domain, record, host, content)
 
 if action == "delete":
-	while record_id == "":
-		record_id = raw_input("What is the DNS Record ID for "+ domain +" that you would like to delete?: ")
-		if record_id == "" or len(record_id) != 32:
-			record_id = ""
-			print "Invalid Record Id. Try Again."
+	while host == "":
+		host = raw_input("What is the host for "+ domain +" that you would like to delete? (Example: {HOST}." + domain + "): ")
+		if host == "":
+			host = ""
+			print "Invalid Host. Try Again."
 
-	print deleteDNSRecord(domain, record_id)
+	print deleteDNSRecord(host, domain)
