@@ -1,6 +1,6 @@
 # Cloudflare Api
 # Ron Egli - Github.com/smugzombie
-# Version 0.6
+# Version 0.7
 
 import requests, json, argparse
 
@@ -23,7 +23,8 @@ def listDNSZones(page=1):
 		zone = data['result'][x]
 		zone_id = len(zones)
 		zones[zone['name']] = {}
-		zones[zone['name']]['status'] = zone['status'] 
+		zones[zone['name']]['status'] = zone['status']
+		zones[zone['name']]['nameservers'] = str(zone['name_servers'][0]) + ", " + str(zone['name_servers'][1])
 
 	zones['stats'] = {}
 	zones['stats']['count'] = data['result_info']['count']
