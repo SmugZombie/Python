@@ -1,13 +1,13 @@
 # Python TaskScheduler
 # Ron Egli / github.com/smugzombie
-# Version 1.1
+# Version 1.2
 # Used to create scheduled tasks easily in Windows.
 
 # Imports
 import win32com.client, os, time, argparse
 
 # Functions
-def create_scheduled_task(name, path, arguments, description, author, daily_interval, hour, run_now):
+def create_scheduled_task(name, path, arguments, description, author, daily_interval, hour, run_now, run_once):
 	computer_name = "" #leave all blank for current computer, current user
 	computer_username = ""
 	computer_userdomain = ""
@@ -71,7 +71,10 @@ def create_scheduled_task(name, path, arguments, description, author, daily_inte
 	task.Enabled = True
 	if run_now is True:
 		runningTask = task.Run("")
-		task.Enabled = True
+	if run_now is False and run_once is True:
+		runningTask = task.Run("")
+	if run_once is True:
+		task.Enabled = False
 	return
 
 # Gets current timezone offset, such as -7
@@ -90,6 +93,10 @@ arguments.add_argument('--company','-c', help="Author of the Scheduled Task", re
 arguments.add_argument('--interval','-i', help="Daily interval to run the Scheduled Task", required=True)
 arguments.add_argument('--time','-t', help="Hour to run the Scheduled Task", required=True)
 arguments.add_argument('--run','-r', help="Run scheduled task now", required=False, action='store_true')
+arguments.add_argument('--runonce','-ro', help="Run scheduled task once", required=False, action='store_true')
 args = arguments.parse_args()
 
-create_scheduled_task(args.name,args.path,args.arguments,args.description,args.company,int(args.interval),int(args.time),args.run)
+try:
+	create_scheduled_task(args.name,args.path,args.arguments,args.description,args.company,int(args.interval),int(args.time),args.run,args.runonce)
+except Exception, e:
+	exit()
