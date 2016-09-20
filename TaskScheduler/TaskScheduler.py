@@ -1,6 +1,6 @@
-import win32com.client, os, time
+import win32com.client, os, time, argparse
 
-def create_scheduled_task(name, path, arguments, description, author, daily_interval, hour):
+def create_scheduled_task(name, path, arguments, description, author, daily_interval, hour, run_now):
 	computer_name = "" #leave all blank for current computer, current user
 	computer_username = ""
 	computer_userdomain = ""
@@ -62,12 +62,27 @@ def create_scheduled_task(name, path, arguments, description, author, daily_inte
 	#run the task once
 	task = rootFolder.GetTask(task_id)
 	task.Enabled = True
-	runningTask = task.Run("")
-	task.Enabled = True
+	if run_now is True:
+		runningTask = task.Run("")
+		task.Enabled = True
 	return
 
 def get_timezone_offset():
 	offset = time.timezone if (time.localtime().tm_isdst == 0) else time.altzone; 
 	return offset / 60 / 60 * -1
 
-create_scheduled_task("Test","C:\\Users\\roneg\\Dropbox\\Work\\TaskScheduler\\test.ahk","","Test Event","BreachRadar",10,14)
+
+# MAIN
+#C:\\Users\\roneg\\Dropbox\\Work\\TaskScheduler\\test.ahk  #C:\Users\roneg\Dropbox\Work\TaskScheduler\test.ahk
+arguments = argparse.ArgumentParser()
+arguments.add_argument('--name','-n', help="Name of the Scheduled Task to Install", required=True)
+arguments.add_argument('--path','-p', help="Path of the Scheduled Task to Install", required=True)
+arguments.add_argument('--arguments','-a', help="Arguments for the Scheduled Task to Install", required=False, default="")
+arguments.add_argument('--description','-d', help="Description of the Scheduled Task to Install", required=True)
+arguments.add_argument('--company','-c', help="Author of the Scheduled Task", required=True)
+arguments.add_argument('--interval','-i', help="Daily interval to run the Scheduled Task", required=True)
+arguments.add_argument('--time','-t', help="Hour to run the Scheduled Task", required=True)
+arguments.add_argument('--run','-r', help="Run scheduled task now", required=False, action='store_true')
+args = arguments.parse_args()
+
+create_scheduled_task(args.name,args.path,args.arguments,args.description,args.company,int(args.interval),int(args.time),args.run)
