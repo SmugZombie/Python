@@ -1,5 +1,12 @@
+# Python TaskScheduler
+# Ron Egli / github.com/smugzombie
+# Version 1.0
+# Used to create scheduled tasks easily in Windows.
+
+# Imports
 import win32com.client, os, time, argparse
 
+# Functions
 def create_scheduled_task(name, path, arguments, description, author, daily_interval, hour, run_now):
 	computer_name = "" #leave all blank for current computer, current user
 	computer_username = ""
@@ -67,13 +74,13 @@ def create_scheduled_task(name, path, arguments, description, author, daily_inte
 		task.Enabled = True
 	return
 
+# Gets current timezone offset, such as -7
 def get_timezone_offset():
 	offset = time.timezone if (time.localtime().tm_isdst == 0) else time.altzone; 
 	return offset / 60 / 60 * -1
 
 
 # MAIN
-#C:\\Users\\roneg\\Dropbox\\Work\\TaskScheduler\\test.ahk  #C:\Users\roneg\Dropbox\Work\TaskScheduler\test.ahk
 arguments = argparse.ArgumentParser()
 arguments.add_argument('--name','-n', help="Name of the Scheduled Task to Install", required=True)
 arguments.add_argument('--path','-p', help="Path of the Scheduled Task to Install", required=True)
