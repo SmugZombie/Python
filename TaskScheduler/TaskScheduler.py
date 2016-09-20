@@ -1,6 +1,6 @@
 # Python TaskScheduler
 # Ron Egli / github.com/smugzombie
-# Version 1.0
+# Version 1.1
 # Used to create scheduled tasks easily in Windows.
 
 # Imports
@@ -14,7 +14,7 @@ def create_scheduled_task(name, path, arguments, description, author, daily_inte
 	computer_password = ""
 	action_id = str(name)
 	action_path = r""+str(path) #executable path
-	action_arguments = r'' #arguments
+	action_arguments = r"" + str(arguments) #arguments
 	action_workdir = r"" + str(os.path.dirname( path ) + "\\") #working directory for action executable
 	author = str(author) #so that end users know who you are
 	description = str(description) #so that end users can identify the task
